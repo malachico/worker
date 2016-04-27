@@ -139,9 +139,13 @@ public class Analyzer {
         return entities;
     }
 
-    private void putAnswerInQueue(int sentiment, List entities, String key) {
+    private void putAnswerInQueue(int sentiment, List entities, String key, String tweet) {
         // Insert message to the queue.
-        Utils.sqs_client.sendMessage(new SendMessageRequest(Utils.workers_manager_queue_url, key + "|" + sentiment + "|" + entities.toString()));
+        Utils.sqs_client.sendMessage(new SendMessageRequest(
+                Utils.workers_manager_queue_url, key + "|" +
+                sentiment + "|" +
+                entities.toString() + "|" +
+                tweet));
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -177,7 +181,7 @@ public class Analyzer {
             System.out.println("entities : " + entities);
 
             // Insert answer to answers queue.
-            analyzer.putAnswerInQueue(sentiment, entities, message.getMessageId());
+            analyzer.putAnswerInQueue(sentiment, entities, message.getMessageId(), tweet);
         }
     }
 }
