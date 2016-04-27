@@ -164,8 +164,9 @@ public class Analyzer {
             String key_link = message.getBody();
             System.out.println("body : " + key_link);
 
-            String key = key_link.split("\\|")[0];
-            String link = key_link.split("\\|")[1];
+            // Message come without a key from getBody().
+//            FIXME: ??? String key = key_link.split("\\|")[0];
+            String link = key_link.split("\\|")[0];
 
             String tweet = analyzer.getTweet(link);
 
@@ -176,7 +177,7 @@ public class Analyzer {
             System.out.println("entities : " + entities);
 
             // Insert answer to answers queue.
-            analyzer.putAnswerInQueue(sentiment, entities, key);
+            analyzer.putAnswerInQueue(sentiment, entities, message.getMessageId());
         }
     }
 }
