@@ -49,7 +49,7 @@ public class Analyzer {
         // Extract page title.
         String tweet = doc.select("title").toString();
         // Clean string.
-        return tweet.substring(7, tweet.length() - 8);
+        return tweet.substring(7, tweet.length() - 8).replace('|', ' ').replace('\n', ' ').replace('\t', ' ');
     }
 
     /**
@@ -198,7 +198,7 @@ public class Analyzer {
 
             // Extract tweet from link.
             String key_link = message.getBody();
-            System.out.println("body : " + key_link);
+            System.out.println("Body : " + key_link);
 
             // Message come without a key from getBody().
             String[] body_content =  key_link.split("\\|");
@@ -210,16 +210,17 @@ public class Analyzer {
             int sentiment = analyzer.findSentiment(tweet);
             List entities = analyzer.getEntities(tweet);
 
-            System.out.println("sentiment : " + sentiment);
-            System.out.println("entities : " + entities);
-            System.out.println("tweet : " + tweet);
+            System.out.println("Sentiment : " + sentiment);
+            System.out.println("Entities : " + entities);
+            System.out.println("Tweet : " + tweet);
 
             // Insert answer to answers queue.
             analyzer.putAnswerInQueue(sentiment, entities, message_id, tweet);
+            System.out.println("Answered");
 
             // Remove processed message from SQS
             analyzer.deleteMessageFromWorkersQueue(message);
-
+            System.out.println("Deleted the message");
         }
     }
 
