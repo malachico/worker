@@ -61,6 +61,13 @@ public class Analyzer {
      */
     private Message getLinkFromSqs() {
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(Utils.manager_workers_queue_url);
+
+        // Change the visibility of the message to 5 minuetes.
+        // A worker processes a message and then when finish, it deletes the message from the queue.
+        // So in case a worker crashes, and the message wasn't deleted for 5 minuetes,
+        // then the other worker will see it again and process it
+        receiveMessageRequest.setVisibilityTimeout(5 * 60);
+
         List<Message> messages = Utils.sqs_client.receiveMessage(receiveMessageRequest).getMessages();
 
         if (messages.size() == 0) {
@@ -169,7 +176,6 @@ public class Analyzer {
             System.out.println("body : " + key_link);
 
             // Message come without a key from getBody().
-//            FIXME: ??? String key = key_link.split("\\|")[0];
             String link = key_link.split("\\|")[0];
 
             String tweet = analyzer.getTweet(link);
@@ -182,6 +188,15 @@ public class Analyzer {
 
             // Insert answer to answers queue.
             analyzer.putAnswerInQueue(sentiment, entities, message.getMessageId(), tweet);
+
+            // Remove processed message from SQS
+            analyzer.deleteMessageFromWorkersQueue(message);
+
         }
+    }
+
+    private void deleteMessageFromWorkersQueue(Message message) {
+        DeleteMessageRequest dms = new DeleteMessageRequest(Utils.manager_workers_queue_url, message.getReceiptHandle());
+        Utils.sqs_client.deleteMessage(dms);
     }
 }
