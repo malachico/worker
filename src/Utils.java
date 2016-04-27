@@ -34,23 +34,20 @@ class Utils {
     static String manager_workers_queue_url;
 
     public static String worker_user_data;
-
     public static String manager_user_data;
 
-
-
     static void init() throws IOException {
-        System.out.println("init_credentials");
-        init_credentials();
+        System.out.println("Init credentials");
+        initCredentials();
 
-        System.out.println("init_s3");
-        init_s3();
+        System.out.println("Init S3");
+        initS3();
 
-        System.out.println("init_ec2_client");
-        init_ec2_client();
+        System.out.println("Init EC2 Client");
+        initEC2Client();
 
-        System.out.println("init_sqs");
-        init_sqs();
+        System.out.println("Init SQS");
+        initSqs();
 
         worker_user_data = "#!/bin/bash" + "\n";
         worker_user_data += "wget http://repo1.maven.org/maven2/edu/stanford/nlp/stanford-corenlp/3.3.0/stanford-corenlp-3.3.0-models.jar && ";
@@ -58,36 +55,38 @@ class Utils {
         worker_user_data += "wget http://repo1.maven.org/maven2/edu/stanford/nlp/stanford-corenlp/3.3.0/stanford-corenlp-3.3.0.jar && ";
         worker_user_data += "wget http://garr.dl.sourceforge.net/project/jollyday/releases/0.4.7/jollyday-0.4.7.jar && ";
         worker_user_data += "wget http://malachi-amir-bucket.s3.amazonaws.com/worker.jar && java -jar worker.jar 5 >> worker_log.txt";
+        worker_user_data += "echo Starting build...";
         worker_user_data += "java -cp .:worker.jar:stanford-corenlp-3.3.0.jar:stanford-corenlp-3.3.0-models.jar:ejml-0.23.jar:jollyday-0.4.7.jar Analyzer";
 
         manager_user_data = "#!/bin/bash" + "\n";
         manager_user_data += "wget http://malachi-amir-bucket.s3.amazonaws.com/manager.jar && java -jar manager.jar 5 >> manager_log.txt";
+
+        System.out.println("Done initialization.");
     }
 
 
-    private static void init_credentials() throws IOException {
+    private static void initCredentials() throws IOException {
         credentials = new PropertiesCredentials(
                 Utils.class.getResourceAsStream("AwsCredentials.properties"));
     }
 
-    private static void init_s3() {
+    private static void initS3() {
         s3_client = new AmazonS3Client(credentials);
     }
 
-    private static void init_sqs() throws IOException {
+    private static void initSqs() throws IOException {
         // Create a queue
         sqs_client = new AmazonSQSClient(credentials);
 
-        local_manager_queue_url = create_queue("local_manager_queue");
-        manager_local_queue_url = create_queue("manager_local_queue");
-        manager_workers_queue_url= create_queue("manager_workers_queue");
-        workers_manager_queue_url= create_queue("workers_manager_queue");
+        local_manager_queue_url = createQueue("local_manager_queue");
+        manager_local_queue_url = createQueue("manager_local_queue");
+        manager_workers_queue_url= createQueue("manager_workers_queue");
+        workers_manager_queue_url= createQueue("workers_manager_queue");
 //        Utils.clearAllSQS();
-//        System.out.println("DEBUG : ALL SQS CLEARED");
     }
 
 
-    private static void init_ec2_client() throws IOException {
+    private static void initEC2Client() throws IOException {
         // Set client connection
         ec2_client = new AmazonEC2Client(credentials);
         ec2_client.setEndpoint("ec2.us-west-2.amazonaws.com");
@@ -98,7 +97,7 @@ class Utils {
      * @param name
      * @return queue url named @name
      */
-    private static String create_queue(String name) {
+    private static String createQueue(String name) {
         try {
             CreateQueueRequest createQueueRequest = new CreateQueueRequest(name);
             return sqs_client.createQueue(createQueueRequest).getQueueUrl();
@@ -171,6 +170,7 @@ class Utils {
         Utils.clearSQS(Utils.local_manager_queue_url);
         Utils.clearSQS(Utils.manager_workers_queue_url);
         Utils.clearSQS(Utils.workers_manager_queue_url);
+        System.out.println("DEBUG : ALL SQS CLEARED");
     }
 
     public static String createWorker() throws UnsupportedEncodingException {

@@ -23,18 +23,26 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * A worker process resides on an EC2 node. Its life cycle is as follows:
- * <p>
- * Repeatedly:
- * Get a message from an SQS queue.
- * Perform the requested job, and return the result.
- * remove the processed message from the SQS queue.
+ * Worker process.
+ * Lifecycle:
+ * - Get URL from SQS.
+ * - Analyze tweet.
+ * - Send result to answer SQS.
+ * - Delete URL from SQS.
  */
 public class Analyzer {
+
     private Analyzer() throws IOException {
         Utils.init();
     }
 
+    /**
+     * Get Tweet from a link.
+     *
+     * @param link URL to process.
+     * @return Text of the tweet.
+     * @throws IOException On HTTP failure.
+     */
     private String getTweet(String link) throws IOException {
         // Get the page and parse it.
         Document doc = Jsoup.connect(link).get();
@@ -47,12 +55,11 @@ public class Analyzer {
     /**
      * Given a message of link, delete it from queue
      *
-     * @param link link to delete
+     * @param link Link to delete
      */
     private void deleteLinkFromQueue(Message link) {
         Utils.sqs_client.deleteMessage(new DeleteMessageRequest(Utils.manager_workers_queue_url, link.getReceiptHandle()));
     }
-
 
     /**
      * Request a new link from the queue handler.
@@ -62,9 +69,9 @@ public class Analyzer {
     private Message getLinkFromSqs() {
         ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(Utils.manager_workers_queue_url);
 
-        // Change the visibility of the message to 5 minuetes.
+        // Change the visibility of the message to 5 minutes.
         // A worker processes a message and then when finish, it deletes the message from the queue.
-        // So in case a worker crashes, and the message wasn't deleted for 5 minuetes,
+        // So in case a worker crashes, and the message wasn't deleted for 5 minutes,
         // then the other worker will see it again and process it
         receiveMessageRequest.setVisibilityTimeout(5 * 60);
 
