@@ -176,7 +176,9 @@ public class Analyzer {
             System.out.println("body : " + key_link);
 
             // Message come without a key from getBody().
-            String link = key_link.split("\\|")[0];
+            String[] body_content =  key_link.split("\\|");
+            String message_id = body_content[0];
+            String link = body_content[1];
 
             String tweet = analyzer.getTweet(link);
 
@@ -185,9 +187,10 @@ public class Analyzer {
 
             System.out.println("sentiment : " + sentiment);
             System.out.println("entities : " + entities);
+            System.out.println("tweet : " + tweet);
 
             // Insert answer to answers queue.
-            analyzer.putAnswerInQueue(sentiment, entities, message.getMessageId(), tweet);
+            analyzer.putAnswerInQueue(sentiment, entities, message_id, tweet);
 
             // Remove processed message from SQS
             analyzer.deleteMessageFromWorkersQueue(message);
