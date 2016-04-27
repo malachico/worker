@@ -119,7 +119,13 @@ public class Analyzer {
         return mainSentiment;
     }
 
-    private List printEntities(String tweet) {
+    /**
+     * Get list of entities from a tweet.
+     *
+     * @param tweet tweet string.
+     * @return List of entities.
+     */
+    private List getEntities(String tweet) {
         List<String> entities = new ArrayList<String>();
 
         Properties props = new Properties();
@@ -153,6 +159,18 @@ public class Analyzer {
         return entities;
     }
 
+    /**
+     * Send result to the queue.
+     *
+     * @param sentiment
+     *  Processed sentiment value.
+     * @param entities
+     *  Entities from the tweet.
+     * @param key
+     *  Message key.
+     * @param tweet
+     *  Tweet text.
+     */
     private void putAnswerInQueue(int sentiment, List entities, String key, String tweet) {
         // Insert message to the queue.
         Utils.sqs_client.sendMessage(new SendMessageRequest(
@@ -190,7 +208,7 @@ public class Analyzer {
             String tweet = analyzer.getTweet(link);
 
             int sentiment = analyzer.findSentiment(tweet);
-            List entities = analyzer.printEntities(tweet);
+            List entities = analyzer.getEntities(tweet);
 
             System.out.println("sentiment : " + sentiment);
             System.out.println("entities : " + entities);
