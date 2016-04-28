@@ -27,7 +27,7 @@ class Utils {
     private static final String WORKERS_MANAGER_QUEUE_NAME = "workers_manager_queue";
     private static final String MANAGER_WORKERS_QUEUE_NAME = "manager_workers_queue";
     private static final String CONFIG_AMAZON_EC2_CLIENT_ENDPOINT = "ec2.us-west-2.amazonaws.com";
-    private static final String CONFIG_CREDENTIALS_FILE_NAME = "Resources/AwsCredentials.properties";
+    private static final String CONFIG_CREDENTIALS_FILE_NAME = "AwsCredentials.properties";
 
     // Queue URL format: x_y_queue_url means x-->y direction queue.
     static String local_manager_queue_url;
