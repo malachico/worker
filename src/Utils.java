@@ -2,8 +2,6 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.PropertiesCredentials;
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.AmazonEC2Client;
-import com.amazonaws.services.ec2.model.CreateTagsRequest;
-import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.sqs.AmazonSQS;
@@ -23,14 +21,19 @@ class Utils {
     static AmazonS3 s3_client;
     static AWSCredentials credentials;
 
+    // Config constants.
+    private static final String LOCAL_MANAGER_QUEUE_NAME = "local_manager_queue";
+    private static final String MANAGER_LOCAL_QUEUE_NAME = "manager_local_queue";
+    private static final String WORKERS_MANAGER_QUEUE_NAME = "workers_manager_queue";
+    private static final String MANAGER_WORKERS_QUEUE_NAME = "manager_workers_queue";
+    private static final String CONFIG_AMAZON_EC2_CLIENT_ENDPOINT = "ec2.us-west-2.amazonaws.com";
+    private static final String CONFIG_CREDENTIALS_FILE_NAME = "AwsCredentials.properties";
+
     // queue urls: x_y_queue_url means x-->y direction queue
     static String local_manager_queue_url;
     static String manager_local_queue_url;
     static String workers_manager_queue_url;
     static String manager_workers_queue_url;
-
-    public static String worker_user_data;
-    public static String manager_user_data;
 
     static void init() throws IOException {
         System.out.println("Init credentials");
@@ -53,7 +56,7 @@ class Utils {
      */
     private static void initCredentials() throws IOException {
         credentials = new PropertiesCredentials(
-                Utils.class.getResourceAsStream("AwsCredentials.properties"));
+                Utils.class.getResourceAsStream(CONFIG_CREDENTIALS_FILE_NAME));
     }
 
     private static void initS3() {
@@ -64,18 +67,20 @@ class Utils {
         // Create a queue
         sqs_client = new AmazonSQSClient(credentials);
 
-        local_manager_queue_url = getQueue("local_manager_queue");
-        manager_local_queue_url = getQueue("manager_local_queue");
-        manager_workers_queue_url= getQueue("manager_workers_queue");
-        workers_manager_queue_url= getQueue("workers_manager_queue");
+        local_manager_queue_url = getQueue(LOCAL_MANAGER_QUEUE_NAME);
+        manager_local_queue_url = getQueue(MANAGER_LOCAL_QUEUE_NAME);
+        manager_workers_queue_url = getQueue(MANAGER_WORKERS_QUEUE_NAME);
+        workers_manager_queue_url = getQueue(WORKERS_MANAGER_QUEUE_NAME);
 //        Utils.clearAllSQS();
     }
 
-
+    /**
+     * Initialize EC2 Client config.
+     */
     private static void initEC2Client() throws IOException {
-        // Set client connection
+        // Set client connection.
         ec2_client = new AmazonEC2Client(credentials);
-        ec2_client.setEndpoint("ec2.us-west-2.amazonaws.com");
+        ec2_client.setEndpoint(CONFIG_AMAZON_EC2_CLIENT_ENDPOINT);
     }
 
     /**
@@ -92,20 +97,6 @@ class Utils {
         catch (Exception e) {
             return sqs_client.getQueueUrl(name).getQueueUrl();
         }
-    }
-
-    /**
-     * Tag a remote instance.
-     *
-     * @param instanceId the instance to tag
-     * @param tag        the tag to give to the instance ( example: "name" )
-     * @param value      the value of the tag ( example: "worker" )
-     */
-    public static void tagInstance(String instanceId, String tag, String value) {
-        CreateTagsRequest request = new CreateTagsRequest();
-        request = request.withResources(instanceId)
-                .withTags(new Tag(tag, value));
-        Utils.ec2_client.createTags(request);
     }
 
     /**
