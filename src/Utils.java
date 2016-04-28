@@ -11,6 +11,8 @@ import com.amazonaws.services.sqs.model.CreateQueueRequest;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
 import org.apache.commons.codec.binary.Base64;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
@@ -49,21 +51,35 @@ class Utils {
         System.out.println("Init SQS");
         initSqs();
 
-        worker_user_data = "#!/bin/bash" + "\n";
-        worker_user_data += "wget http://repo1.maven.org/maven2/edu/stanford/nlp/stanford-corenlp/3.3.0/stanford-corenlp-3.3.0-models.jar && ";
-        worker_user_data += "wget http://repo1.maven.org/maven2/com/googlecode/efficient-java-matrix-library/ejml/0.23/ejml-0.23.jar && ";
-        worker_user_data += "wget http://repo1.maven.org/maven2/edu/stanford/nlp/stanford-corenlp/3.3.0/stanford-corenlp-3.3.0.jar && ";
-        worker_user_data += "wget http://garr.dl.sourceforge.net/project/jollyday/releases/0.4.7/jollyday-0.4.7.jar && ";
-        worker_user_data += "wget http://malachi-amir-bucket.s3.amazonaws.com/worker.jar && java -jar worker.jar 5 >> worker_log.txt";
-        worker_user_data += "echo Starting build...";
-        worker_user_data += "java -cp .:worker.jar:stanford-corenlp-3.3.0.jar:stanford-corenlp-3.3.0-models.jar:ejml-0.23.jar:jollyday-0.4.7.jar Analyzer";
+        // Load worker and manager data from file.
+        worker_user_data = loadFromFile("Resources/worker.sh");
+        manager_user_data = loadFromFile("Resources/manager.sh");
 
-        manager_user_data = "#!/bin/bash" + "\n";
-        manager_user_data += "wget http://malachi-amir-bucket.s3.amazonaws.com/manager.jar && java -jar manager.jar 5 >> manager_log.txt";
-
-        System.out.println("Done initialization.");
+        System.out.println("Initialization done.");
     }
 
+    /**
+     * Load file data into a string.
+     *
+     * @param filePath
+     * @return file's data.
+     * @throws IOException
+     */
+    private static String loadFromFile(String filePath)  throws IOException {
+        String data = "";
+        BufferedReader reader = null;
+        String currentLine;
+
+        reader = new BufferedReader(new FileReader(filePath));
+        while ((currentLine = reader.readLine()) != null) {
+            data += currentLine + "\n";
+        }
+        if (reader != null) {
+            reader.close();
+        }
+
+        return data;
+    }
 
     private static void initCredentials() throws IOException {
         credentials = new PropertiesCredentials(
