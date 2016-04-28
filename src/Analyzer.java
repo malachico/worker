@@ -205,7 +205,17 @@ public class Analyzer {
             String message_id = body_content[0];
             String link = body_content[1];
 
-            String tweet = analyzer.getTweet(link);
+            String tweet;
+            try {
+                tweet = analyzer.getTweet(link);
+            }
+            catch(IllegalArgumentException e) {
+                // The message body is illegal.
+                System.out.println("Illegal message body: " + link);
+                // Move on, the message is already deleted from the queue.
+                // FIXME @malachico anything else needed to be done here?
+                continue;
+            }
 
             int sentiment = analyzer.findSentiment(tweet);
             List entities = analyzer.getEntities(tweet);
