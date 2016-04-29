@@ -208,7 +208,7 @@ public class Analyzer {
                 tweet = analyzer.getTweet(link);
                 sentiment = analyzer.findSentiment(tweet);
                 entities = analyzer.getEntities(tweet);
-            } catch (IllegalArgumentException e) {
+            } catch (Exception e) {
                 // The message body is illegal.
                 System.out.println("Illegal message body: " + link);
                 // Move on, the message is already deleted from the queue.
@@ -216,7 +216,8 @@ public class Analyzer {
                 // malachi : Yes, the manager waits for X messages in queue.
                 // if he will receive only x-1 messages, it will wait for it forever.
                 // so we will send it a message says the message received is malformed
-                entities.add("Error: Malformed message");
+                System.out.println("MALFORMED MESSAGE PARSED. SENDING ERROR TO MANAGER");
+                entities.add("Error: Malformed message, maybe url doesn't exists.");
                 analyzer.putAnswerInQueue(sentiment, entities, message_id, "tweet couldn't be parsed");
                 continue;
             }
