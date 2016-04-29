@@ -72,6 +72,7 @@ class Utils {
         manager_workers_queue_url = getQueue(MANAGER_WORKERS_QUEUE_NAME);
         workers_manager_queue_url = getQueue(WORKERS_MANAGER_QUEUE_NAME);
 //        Utils.clearAllSQS();
+//        System.out.println("sqs cleared");
     }
 
     /**

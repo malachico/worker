@@ -73,7 +73,7 @@ public class Analyzer {
         // A worker processes a message and then when finish, it deletes the message from the queue.
         // So in case a worker crashes, and the message wasn't deleted for 5 minutes,
         // then the other worker will see it again and process it
-        receiveMessageRequest.setVisibilityTimeout(5 * 60);
+        receiveMessageRequest.setVisibilityTimeout(60);
 
         List<Message> messages = Utils.sqs_client.receiveMessage(receiveMessageRequest).getMessages();
 
