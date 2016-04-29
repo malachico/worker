@@ -162,14 +162,10 @@ public class Analyzer {
     /**
      * Send result to the queue.
      *
-     * @param sentiment
-     *  Processed sentiment value.
-     * @param entities
-     *  Entities from the tweet.
-     * @param key
-     *  Message key.
-     * @param tweet
-     *  Tweet text.
+     * @param sentiment Processed sentiment value.
+     * @param entities  Entities from the tweet.
+     * @param key       Message key.
+     * @param tweet     Tweet text.
      */
     private void putAnswerInQueue(int sentiment, List entities, String key, String tweet) {
         // Insert message to the queue.
@@ -198,27 +194,33 @@ public class Analyzer {
 
             // Extract tweet from link.
             String key_link = message.getBody();
-            System.out.println("Body : " + key_link);
 
             // Message come without a key from getBody().
-            String[] body_content =  key_link.split("\\|");
+            String[] body_content = key_link.split("\\|");
             String message_id = body_content[0];
             String link = body_content[1];
+
+            int sentiment = 0;
+            List entities = new ArrayList();
 
             String tweet;
             try {
                 tweet = analyzer.getTweet(link);
-            }
-            catch(IllegalArgumentException e) {
+                sentiment = analyzer.findSentiment(tweet);
+                entities = analyzer.getEntities(tweet);
+            } catch (IllegalArgumentException e) {
                 // The message body is illegal.
                 System.out.println("Illegal message body: " + link);
                 // Move on, the message is already deleted from the queue.
                 // FIXME @malachico anything else needed to be done here?
+                // malachi : Yes, the manager waits for X messages in queue.
+                // if he will receive only x-1 messages, it will wait for it forever.
+                // so we will send it a message says the message received is malformed
+                entities.add("Error: Malformed message");
+                analyzer.putAnswerInQueue(sentiment, entities, message_id, "tweet couldn't be parsed");
                 continue;
             }
 
-            int sentiment = analyzer.findSentiment(tweet);
-            List entities = analyzer.getEntities(tweet);
 
             System.out.println("Sentiment : " + sentiment);
             System.out.println("Entities : " + entities);
