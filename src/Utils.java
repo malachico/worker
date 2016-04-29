@@ -94,8 +94,7 @@ class Utils {
         try {
             CreateQueueRequest createQueueRequest = new CreateQueueRequest(name);
             return sqs_client.createQueue(createQueueRequest).getQueueUrl();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return sqs_client.getQueueUrl(name).getQueueUrl();
         }
     }
@@ -103,7 +102,7 @@ class Utils {
     /**
      * Clear queue for debugging.
      */
-    public static void clearSQS(String queueUrl){
+    public static void clearSQS(String queueUrl) {
         sqs_client.purgeQueue(new PurgeQueueRequest(queueUrl));
 
     }
