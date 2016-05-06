@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 
 /**
  * Worker process.
@@ -167,18 +168,21 @@ public class Analyzer {
      * @param key       Message key.
      * @param tweet     Tweet text.
      */
-    private void putAnswerInQueue(int sentiment, List entities, String key, String tweet) {
+    private void putAnswerInQueue(int sentiment, List entities, String key, String tweet, String instanceId) {
         // Insert message to the queue.
         Utils.sqs_client.sendMessage(new SendMessageRequest(
                 Utils.workers_manager_queue_url, key + "|" +
                 sentiment + "|" +
                 entities.toString() + "|" +
-                tweet));
+                tweet + "|" +
+                instanceId));
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
         // Init analyzer.
         Analyzer analyzer = new Analyzer();
+        String instanceId = new Random().nextInt(Integer.MAX_VALUE) + "";
+
         while (true) {
             // Get link to analyze from SQS.
             Message message = analyzer.getLinkFromSqs();
@@ -218,7 +222,7 @@ public class Analyzer {
                 // so we will send it a message says the message received is malformed
                 System.out.println("MALFORMED MESSAGE PARSED. SENDING ERROR TO MANAGER");
                 entities.add("Error: Malformed message, maybe url doesn't exists.");
-                analyzer.putAnswerInQueue(sentiment, entities, message_id, "tweet couldn't be parsed");
+                analyzer.putAnswerInQueue(sentiment, entities, message_id, "tweet couldn't be parsed", instanceId);
                 continue;
             }
 
@@ -228,7 +232,7 @@ public class Analyzer {
             System.out.println("Tweet : " + tweet);
 
             // Insert answer to answers queue.
-            analyzer.putAnswerInQueue(sentiment, entities, message_id, tweet);
+            analyzer.putAnswerInQueue(sentiment, entities, message_id, tweet, instanceId);
             System.out.println("Answered");
 
             // Remove processed message from SQS
